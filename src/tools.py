@@ -1,6 +1,9 @@
 from graphlib import TopologicalSorter
 import requests
 
+from zoneinfo import ZoneInfo
+from datetime import datetime
+
 from langchain.tools import tool
 
 
@@ -30,7 +33,7 @@ def get_weather(city: str) -> str:
     country = location.get("country", "")
 
 
-    # Get current weather using coordinates
+    # Get current weather using coordinates (the api works with coordinates, not city names)
     weather_url = (
         f"https://api.open-meteo.com/v1/forecast?"
         f"latitude={latitude}&longitude={longitude}&"
@@ -75,3 +78,64 @@ def get_weather(city: str) -> str:
     return str(result)
 
 
+@tool
+def get_current_time(city: str) -> str:
+    """Get the current time and date for a given city using timezone from coordinates."""
+    import urllib.parse
+
+    # Get coordinates for the city using Open-Meteo geocoding
+    encoded_city = urllib.parse.quote(city)
+    geocode_url = f"https://geocoding-api.open-meteo.com/v1/search?name={encoded_city}&count=1"
+
+    try:
+        geocode_response = requests.get(geocode_url, timeout=10)
+        geocode_response.raise_for_status()
+        geocode_data = geocode_response.json()
+    except requests.RequestException as e:
+        return f"Error: Could not find city: {e}"
+
+    if not geocode_data.get("results"):
+        return f"Error: Could not find coordinates for city: {city}"
+
+    location = geocode_data["results"][0]
+    latitude = location["latitude"]
+    longitude = location["longitude"]
+    city_name = location.get("name", city)
+    country = location.get("country", "")
+
+    # Get timezone from coordinates (timeapi.io)
+    timezone_lookup_url = (
+        f"https://timeapi.io/api/TimeZone/coordinate?latitude={latitude}&longitude={longitude}"
+    )
+    try:
+        timezone_response = requests.get(timezone_lookup_url, timeout=10)
+        timezone_response.raise_for_status()
+        timezone_data = timezone_response.json()
+        timezone_name = timezone_data.get("timeZoneName", "UTC")
+    except requests.RequestException:
+        timezone_name = "UTC"
+
+    # Use Python stdlib only for current time (no worldtimeapi.org)
+    try:
+        tz = ZoneInfo(timezone_name)
+    except Exception:
+        tz = ZoneInfo("UTC")
+    dt = datetime.now(tz)
+
+    date_str = dt.strftime("%A, %B %d, %Y")
+    time_str = dt.strftime("%I:%M:%S %p")
+    time_24h = dt.strftime("%H:%M:%S")
+    utc_offset = dt.strftime("%z")
+    if len(utc_offset) >= 5:
+        utc_offset = utc_offset[:3] + ":" + utc_offset[3:5]
+
+    result = {
+        "city": f"{city_name}, {country}" if country else city_name,
+        "timezone": timezone_name,
+        "date": date_str,
+        "time_12h": time_str,
+        "time_24h": time_24h,
+        "day_of_week": dt.strftime("%A"),
+        "utc_offset": utc_offset or "N/A",
+    }
+    return str(result)

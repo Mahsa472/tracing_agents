@@ -7,8 +7,9 @@ from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
-
+# Import local tools
 from tools import get_weather
+from tools import get_current_time
 
 #Load environment variables
 load_dotenv()
@@ -21,6 +22,7 @@ model = ChatOpenAI(model=os.environ["OPENAI_MODEL"], temperature=0)
 def main():
     print("Hello from agents-observation!")
     print(get_weather.invoke("Isfahan"))
+    print(get_current_time.invoke("Isfahan"))
 
 
 if __name__ == "__main__":
