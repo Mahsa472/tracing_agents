@@ -25,6 +25,17 @@ services:
     networks:
       - otel
 
+  # Trace backend: view traces and span attributes (prompts, messages) at http://localhost:16686
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"   # required so Jaeger accepts OTLP gRPC from the collector
+    ports:
+      - "16686:16686"   # UI
+      - "4317:4317"     # OTLP gRPC (collector sends traces here)
+    networks:
+      - otel
+
   app:
     build: .
     env_file: .env
