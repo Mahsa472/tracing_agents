@@ -16,7 +16,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 from tools import get_weather, get_current_time
 from agents import call_weather_time_agent
-from telemetry import init_telemetry
+from telemetry import init_telemetry, record_agent_invocation
 
 # Load environment variables
 load_dotenv()
@@ -64,6 +64,7 @@ def main():
             
             try:
                 conversation_history.append(HumanMessage(content=user_input))
+                record_agent_invocation()
                 response = call_weather_time_agent(model=model, conversation_history= conversation_history)
                 ai_response = response["messages"][-1].content
                 print(f"Assistant: {ai_response}")

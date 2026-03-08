@@ -1,0 +1,10 @@
+.venv
+.git
+__pycache__
+*.pyc
+.python-version
+uv.lock
+.env
+*.md
+agent-transcripts
+.cursor

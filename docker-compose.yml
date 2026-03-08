@@ -1,0 +1,42 @@
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel/config.yaml
+    ports:
+      - "4318:4318"   # OTLP HTTP
+      - "8889:8889"   # Prometheus scrape
+    networks:
+      - otel
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus-docker.yml:/etc/prometheus/prometheus.yml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    ports:
+      - "9090:9090"
+    depends_on:
+      - otel-collector
+    networks:
+      - otel
+
+  app:
+    build: .
+    env_file: .env
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318/
+    depends_on:
+      - otel-collector
+    stdin_open: true
+    tty: true
+    networks:
+      - otel
+
+networks:
+  otel:
+    driver: bridge

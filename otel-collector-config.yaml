@@ -1,7 +1,8 @@
-# Minimal OpenTelemetry Collector config for receiving LLM telemetry (traces + metrics).
+# OTLP Collector: receives traces + metrics from the app; exports metrics to Prometheus.
+# Traces (including contents/messages) are NOT sent to Prometheus (Prometheus is metrics-only).
 # Run: otelcol-contrib --config=otel-collector-config.yaml
-# Or with Docker:
-#   docker run -v $(pwd)/otel-collector-config.yaml:/etc/otel/config.yaml -p 4318:4318 otel/opentelemetry-collector-contrib:latest --config=/etc/otel/config.yaml
+# Docker (expose 4318 OTLP, 8889 Prometheus scrape):
+#   docker run -v $(pwd)/otel-collector-config.yaml:/etc/otel/config.yaml -p 4318:4318 -p 8889:8889 otel/opentelemetry-collector-contrib:latest --config=/etc/otel/config.yaml
 receivers:
   otlp:
     protocols:
@@ -14,11 +15,14 @@ processors:
 exporters:
   debug:
     verbosity: detailed
-  # Uncomment and set endpoint to send to a real backend, e.g.:
-  # otlp:
-  #   endpoint: your-backend:4317
-  #   tls:
-  #     insecure: true
+  # Metrics in Prometheus format; Prometheus scrapes http://<collector>:8889/metrics
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: "genai"
+  # Optional: add an OTLP exporter for traces (Tempo, Jaeger, etc.) and add it to traces pipeline
+  # otlp/tempo:
+  #   endpoint: tempo:4317
+  #   tls: { insecure: true }
 
 service:
   pipelines:
@@ -29,4 +33,4 @@ service:
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
+      exporters: [debug, prometheus]
