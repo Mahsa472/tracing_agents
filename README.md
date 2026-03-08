@@ -2,6 +2,8 @@
 
 LLM agent with OpenTelemetry observability (traces, metrics, prompts/content) using GenAI semantic conventions.
 
+**Which attributes are used?** See [docs/OTEL_ATTRIBUTES.md](docs/OTEL_ATTRIBUTES.md) for the full list and links to the official specs.
+
 ## OpenTelemetry setup
 
 - **SDK**: Traces and metrics are produced by the OpenTelemetry Python SDK and sent to an OTLP collector over HTTP.
