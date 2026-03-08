@@ -1,0 +1,32 @@
+# Minimal OpenTelemetry Collector config for receiving LLM telemetry (traces + metrics).
+# Run: otelcol-contrib --config=otel-collector-config.yaml
+# Or with Docker:
+#   docker run -v $(pwd)/otel-collector-config.yaml:/etc/otel/config.yaml -p 4318:4318 otel/opentelemetry-collector-contrib:latest --config=/etc/otel/config.yaml
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+
+exporters:
+  debug:
+    verbosity: detailed
+  # Uncomment and set endpoint to send to a real backend, e.g.:
+  # otlp:
+  #   endpoint: your-backend:4317
+  #   tls:
+  #     insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]

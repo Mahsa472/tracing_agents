@@ -16,14 +16,21 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 from tools import get_weather, get_current_time
 from agents import call_weather_time_agent
+from telemetry import init_telemetry
 
-
-#Load environment variables
+# Load environment variables
 load_dotenv()
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["OPENAI_MODEL"] = os.getenv("OPENAI_MODEL")
 
-# Initialize the model
+# OpenTelemetry: when OTEL_EXPORTER_OTLP_ENDPOINT is set, traces + metrics go to that collector
+init_telemetry(
+    service_name="weather-time-agent",
+    otlp_endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
+    capture_content=True,
+)
+
+# Initialize the model (after instrumentation so LLM calls are traced)
 model = ChatOpenAI(model=os.environ["OPENAI_MODEL"], temperature=0)
 
 def main():

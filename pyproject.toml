@@ -11,4 +11,9 @@ dependencies = [
     "langchain-openai>=1.1.10",
     "python-dotenv>=1.2.1",
     "tzdata>=2025.3",
+    # OpenTelemetry SDK + OTLP export + GenAI (OpenAI) instrumentation
+    "opentelemetry-api>=1.28.0",
+    "opentelemetry-sdk>=1.28.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.28.0",
+    "opentelemetry-instrumentation-openai-v2>=2.1b0",
 ]
