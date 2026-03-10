@@ -29,7 +29,9 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:latest
     environment:
-      COLLECTOR_OTLP_ENABLED: "true"   # required so Jaeger accepts OTLP gRPC from the collector
+      COLLECTOR_OTLP_ENABLED: "true"
+      # Listen on 0.0.0.0 so the collector (other container) can reach 4317
+      COLLECTOR_OTLP_GRPC_HOST_PORT: "0.0.0.0:4317"
     ports:
       - "16686:16686"   # UI
       - "4317:4317"     # OTLP gRPC (collector sends traces here)
